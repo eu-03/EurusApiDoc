@@ -1,0 +1,389 @@
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_certain_peril">Certain Peril</a>
+<ul class="sectlevel2">
+<li><a href="#_a_recipe_for_potion">A Recipe for Potion</a></li>
+</ul>
+</li>
+<li><a href="#_dawn_on_the_plateau">Dawn on the Plateau</a></li>
+<li><a href="#_sample_section">Sample Section</a></li>
+<li><a href="#_user">User</a>
+<ul class="sectlevel2">
+<li><a href="#_account">Account</a></li>
+</ul>
+</li>
+<li><a href="#_admin">Admin</a>
+<ul class="sectlevel2">
+<li><a href="#_account_2">Account</a></li>
+<li><a href="#_payment">Payment</a></li>
+<li><a href="#_others">Others</a></li>
+</ul>
+</li>
+<li><a href="#_merchant">Merchant</a>
+<ul class="sectlevel2">
+<li><a href="#_account_3">Account</a></li>
+<li><a href="#_transaction">Transaction</a></li>
+<li><a href="#_payment_2">Payment</a></li>
+<li><a href="#_others_2">Others</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_certain_peril">Certain Peril</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Daylight trickles across the cobblestones&#8230;&#8203;</p>
+</div>
+<div class="sect2">
+<h3 id="_a_recipe_for_potion">A Recipe for Potion</h3>
+<div class="paragraph">
+<p>We have to harvest the leaves by the light of the teal moons&#8230;&#8203;</p>
+</div>
+<div class="sect3">
+<h4 id="_searching_for_ginseng">Searching for Ginseng</h4>
+<div class="paragraph">
+<p>Crawling through the twisted understory&#8230;&#8203;</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dawn_on_the_plateau">Dawn on the Plateau</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hanging from&#8230;&#8203;</p>
+</div>
+<div class="paragraph">
+<p>[TIP]TIP</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sample_section">Sample Section</h2>
+<div class="sectionbody">
+<div class="ulist square">
+<ul class="square">
+<li>
+<p>Item 1</p>
+</li>
+<li>
+<p>Item 2</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-ruby" data-lang="ruby">puts "Hellow World!"</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_user">User</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_account">Account</h3>
+<div class="sect3">
+<h4 id="_post_userregisterbyemail">POST ​/user​/registerByEmail</h4>
+<div class="paragraph">
+<p>Register a new user by email. System creates an user wallet and a corresponding private, public key</p>
+</div>
+<div class="paragraph">
+<p>Request Example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+    "timestamp": 0,
+    "deviceId": "string",
+    "email": "user@example.com",
+    "loginAddress": "string",
+    "signature": "string",
+    "publicKey": "string"
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/verification
+verify user</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/setupPaymentWallet
+after user successfully verified, generate a owner wallet address call this endpoint</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/resendVerificationEmail
+self explanatory</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/importWallet
+Import an existing MetaMask or similar wallet into Eurus</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/loginByPassword
+User uses password to request login token</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/loginBySignature
+For MetaMask user to login system by sign a request by user owned private key</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/refreshToken
+Extend Login token expiry time if the token is not expired</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/signTransaction
+Sign transaction that invoke UserWallet smart contract</p>
+</div>
+<div class="paragraph">
+<p>GET
+​/user​/clientVersion
+Get the latest client version</p>
+</div>
+<div class="paragraph">
+<p>GET
+​/user​/serverConfig
+Get the system server config</p>
+</div>
+<div class="paragraph">
+<p>GET
+​/user​/details</p>
+</div>
+<div class="paragraph">
+<p>GET
+​/user​/storage
+Get the storage data in DB</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/storage
+Set/Update the storage data in DB</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/friend
+Add friend</p>
+</div>
+<div class="paragraph">
+<p>GET
+​/user​/friend
+Get friend list</p>
+</div>
+<div class="paragraph">
+<p>PUT
+​/user​/friend​/{walletAddress}
+Update friend nick name</p>
+</div>
+<div class="paragraph">
+<p>DELETE
+​/user​/friend​/{walletAddress}
+Delete a friend</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/changeLoginPassword
+Change login password</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/changePaymentPassword
+Change payment password</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/registerDevice
+Register a device for an user</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/recentTransaction
+lastest user transaction records for last n days</p>
+</div>
+<div class="paragraph">
+<p>GET
+​/user​/withdrawAdminFee​/{currencySymbol}</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/forgetLoginPassword
+forget login address</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/verifyForgetLoginPassword
+verify forget login password token</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/resetLoginPassword
+reset login password</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/forgetPaymentPassword
+forget payment address</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/verifyForgetPaymentPassword
+verify forget login password token</p>
+</div>
+<div class="paragraph">
+<p>POST
+​/user​/resetPaymentPassword
+reset login password
+=== Tansactions
+=== Payment</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_admin">Admin</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_account_2">Account</h3>
+<div class="listingblock">
+<div class="content">
+<pre>/admin​/login</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/merchant</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/merchant</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/merchant​/{merchantId}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/subAdmin</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/subAdmin</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/subAdmin​/{adminId}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/subAdmin​/role​/{adminId}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/subAdmin​/password​/{adminId}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/subAdmin​/status​/{adminId}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/permission</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/role</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/role​/{roleId}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/pendingWithdraw</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/pendingWithdraw​/{</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/pendingWithdrawHistory</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/pendingConfirmAPISetting</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/pendingConfirmAPISetting​/{pendingId}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/server​/list</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>​/admin​/fee​/withdrawalFee</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_payment">Payment</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_others">Others</h3>
+
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_merchant">Merchant</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_account_3">Account</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_transaction">Transaction</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_payment_2">Payment</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_others_2">Others</h3>
+
+</div>
+</div>
+</div>
