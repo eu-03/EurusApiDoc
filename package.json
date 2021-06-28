@@ -5,7 +5,6 @@
   "repository": "https://github.com/eu-03/EurusApiDoc.git",
   "license": "MIT",
   "dependencies": {
-    "asciidoctor": "^2.2.4",
     "express": "^4.17.1",
     "swagger-ui-express": "^4.1.6",
     "yamljs": "^0.3.0"

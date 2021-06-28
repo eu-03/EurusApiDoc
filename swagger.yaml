@@ -1,17 +1,10 @@
 openapi: 3.0.1
 info:
-  title: Eurus API Version 0.1.16
-  description: Eurus API specification version 0.1.16
-  termsOfService: http://swagger.io/terms/
+  title: Eurus API Reference
+  version: 0.1.16
+  termsOfService: https://Eurus/terms/
   contact:
     email: placeholder@18m.com
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  version: 0.1.15
-externalDocs:
-  description: Find out more about Swagger
-  url: http://swagger.io
 servers:
   - url: http://54.254.5.83:8082/
 tags:
