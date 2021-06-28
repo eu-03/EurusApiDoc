@@ -15,7 +15,13 @@ externalDocs:
 servers:
   - url: http://54.254.5.83:8082/
 tags:
-  - name: user
+  - name: User Account
+    description: User related service
+  - name: User Trascation
+    description: User related service
+  - name: User Contact
+    description: User related service
+  - name: User Others
     description: User related service
   - name: admin
     description: Admin management service
@@ -26,9 +32,11 @@ paths:
   /user/registerByEmail:
     post:
       tags:
-        - user
+        - User Account
       summary: Register a new user by email. System creates an user wallet and a corresponding private, public key.
       description: |
+        For Account creation step 1.
+
         timestamp - int64 - account creation date<br>
         deviceId - string - Your device MAC address<br>
         email - int64 - string for account creation date<br>
@@ -48,28 +56,37 @@ paths:
                       type: integer
                       format: int32
                       description: Current unix timestamp
-                      default: "2021-06-25T07:34:01.266Z"
+                      default: 1624611931727
                     deviceId:
                       type: string
                       description: Device ID
+                      default: "6030d8e4-d594-11eb-b8bc-0242ac130003"
                     email:
                       type: string
                       description: Unique login email for verification
-                      format: email
+                      format: "abc@email.com"
                     loginAddress:
                       type: string
                       description: Login Address.
                       minimum: 3
                       maximum: 20
+                      default: "00:0a:95:9d:68:16"
                     signature:
                       type: string
                       description: signature hashed value of (timestamp, deviceId, loginAdress).
+                      default:
+                        MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCclOmZ4m9V+G43b23GgEjerU54NrAz8qiVG5apbg2ff+Hw/Zq8JpjO0M9NaJ74KscVbL4drR0LL4MRd58ce/MN5rUIXl6V7dNtQ5KARuIr6GesY96BhH2o4SHzk6SQTTcLHM2Ysvu83Qptzaylc77Myi9ShkdwJqlC0rOenfaFmwIDAQAB
                     publicKey:
                       type: string
-                      description: publicKey of the .                      
+                      description: publicKey of the .
                       # description: Login password.
                       # minimum: 5
                       # maximum: 20
+                      default: |
+                        MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCG/qcshFiSSkGTP7g2Lr5JcNJA
+                        J+XIR5SMKTXWVb5btg1IUnoOuicHCgrSjhIG/owzWLoEXFSpFc+6N0zx4iMJVb3T
+                        wct/355Vs/xEGUO3VucnyCBrvuv8sOWC8Pban2XF6sjOX3+f4Gvil5AbvCwsjK9J
+                        xX0tSQhbiQLNhznNGwIDAQAB
               required:
                 - email
                 - loginAddress
@@ -93,8 +110,12 @@ paths:
           type: string
         required: true
     post:
+      description: |
+        For account creation step 2. After registeration, need to verify the code from email
+
+        Prerequisite: use token from registration (ie: /user/registerByEmail) in Authorization
       tags:
-        - user
+        - User Account
       summary:
         verify user
       operationId: verification
@@ -153,8 +174,10 @@ paths:
           type: string
         required: true
     post:
+      description: |
+        For account creation step 3. After code verification, need to generate wallet address
       tags:
-        - user
+        - User Account
       summary:
         after user successfully verified, generate a owner wallet address call this endpoint
       operationId: verificationCallback
@@ -204,8 +227,10 @@ paths:
 
   /user/resendVerificationEmail:
     post:
+      description: |
+        For account creation step 2. After registration, need to verify the code from email. If verification is not received in the email, user can use this to send the code to email again.
       tags:
-        - user
+        - User Account
       summary:
         self explanatory
       operationId: resend
@@ -235,8 +260,10 @@ paths:
 
   /user/importWallet:
     post:
+      description: |
+        For account creation step 3. After code verification, user can import own wallet.
       tags:
-        - user
+        - User Account
       summary: Import an existing MetaMask or similar wallet into Eurus
       operationId: importWallet
       requestBody:
@@ -319,8 +346,10 @@ paths:
 
   /user/loginByPassword:
     post:
+      description: |
+        Not impelemented
       tags:
-        - user
+        - User Account
       summary: User uses password to request login token
       operationId: loginByPassword
       requestBody:
@@ -372,8 +401,10 @@ paths:
 
   /user/loginBySignature:
     post:
+      description: |
+        Retrieve login token by authenticating signature
       tags:
-        - user
+        - User Account
       summary: For MetaMask user to login system by sign a request by user owned private key
       operationId: loginBySignature
       requestBody:
@@ -465,7 +496,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Account
       summary: Extend Login token expiry time if the token is not expired
       operationId: refershToken
       requestBody:
@@ -505,7 +536,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Transaction
       summary: Sign transaction that invoke UserWallet smart contract
       operationId: signTransaction
       requestBody:
@@ -547,7 +578,7 @@ paths:
   /user/clientVersion:
     get:
       tags:
-        - user
+        - User Others
       summary: Get the latest client version
       operationId: clientVersion
 
@@ -576,7 +607,7 @@ paths:
   /user/serverConfig:
     get:
       tags:
-        - user
+        - User Others
       summary: Get the system server config
       operationId: serverConfig
       responses:
@@ -637,7 +668,7 @@ paths:
         required: true
     get:
       tags:
-        - user
+        - User Account
       responses:
         200:
           description: successful operation
@@ -693,7 +724,7 @@ paths:
     get:
       summary: Get the storage data in DB
       tags:
-        - user
+        - User Others
       requestBody:
         content:
           "application/json":
@@ -739,7 +770,7 @@ paths:
                           - platform
     post:
       tags:
-        - user
+        - User Others
       summary: Set/Update the storage data in DB
       requestBody:
         content:
@@ -798,7 +829,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Contact
       summary: Add friend
       operationId: addFriend
       requestBody:
@@ -831,7 +862,7 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
     get:
       tags:
-        - user
+        - User Contact
       summary: Get friend list
       responses:
         200:
@@ -877,7 +908,7 @@ paths:
         required: true
     put:
       tags:
-        - user
+        - User Contact
       summary: Update friend nick name
       requestBody:
         content:
@@ -903,7 +934,7 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
     delete:
       tags:
-        - user
+        - User Contact
       summary: Delete a friend
       requestBody:
         content:
@@ -931,7 +962,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Account
       summary: Change login password
       requestBody:
         content:
@@ -995,7 +1026,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Account
       summary: Change payment password
       requestBody:
         content:
@@ -1051,7 +1082,7 @@ paths:
   /user/registerDevice:
     post:
       tags:
-        - user
+        - User Account
       summary: Register a device for an user
       operationId: registerDevice
       requestBody:
@@ -1089,7 +1120,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Trascation
       summary: lastest user transaction records for last n days
       operationId: recentTransaction
       requestBody:
@@ -1290,7 +1321,7 @@ paths:
         required: true
     get:
       tags:
-        - user
+        - User Trascation
       responses:
         200:
           description: successful operation
@@ -1325,7 +1356,7 @@ paths:
   /user/forgetLoginPassword:
     post:
       tags:
-        - user
+        - User Account
       summary:
         forget login address
       operationId: forgetLoginAddress
@@ -1354,7 +1385,7 @@ paths:
   /user/verifyForgetLoginPassword:
     post:
       tags:
-        - user
+        - User Account
       summary: verify forget login password token
       operationId: verify forget login password token
       requestBody:
@@ -1399,7 +1430,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Account
       summary: reset login password
       operationId: resetLoginPassword
       requestBody:
@@ -1456,7 +1487,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Account
       summary:
         forget payment address
       operationId: forgetPaymentAddress
@@ -1487,7 +1518,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Account
       summary: verify forget login password token
       operationId: verify forget login password token
       requestBody:
@@ -1529,7 +1560,7 @@ paths:
         required: true
     post:
       tags:
-        - user
+        - User Account
       summary: reset login password
       operationId: resetLoginPassword
       requestBody:
