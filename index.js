@@ -1,9 +1,12 @@
 const express = require('express')
+const path = require("path");
 const app = express()
 
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
-const swaggerDocument = YAML.load('./swagger.yaml');
+const swaggerDocument = YAML.load('./public/swagger.yaml');
+
+app.use('/public', express.static(path.join(__dirname, 'public')))
 
 const swaggerOptions = {
     customCss: '.swagger-ui .topbar { display: none }',

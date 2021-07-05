@@ -10,15 +10,15 @@ servers:
 tags:
   - name: User Account
     description: User related service
-  - name: User Trascation
+  - name: User Transaction
     description: User related service
   - name: User Contact
     description: User related service
   - name: User Others
     description: User related service
-  - name: admin
+  - name: Admin
     description: Admin management service
-  - name: merchant
+  - name: Merchant
     description: Merchant admin management service
 
 paths:
@@ -29,13 +29,6 @@ paths:
       summary: Register a new user by email. System creates an user wallet and a corresponding private, public key.
       description: |
         For Account creation step 1.
-
-        timestamp - int64 - account creation date<br>
-        deviceId - string - Your device MAC address<br>
-        email - int64 - string for account creation date<br>
-        loginAddress - string - Mac Address date<br>
-        signature - string - signature hashed value of (timestamp, deviceId, loginAdress)<br>
-        publicKey - string - public key for the RSA algorithm
       operationId: registerByEmail
       requestBody:
         content:
@@ -45,45 +38,47 @@ paths:
                 - $ref: "#/components/schemas/GeneralRequest"
                 - type: object
                   properties:
+                    nonce:
+                      type: string
                     timestamp:
                       type: integer
                       format: int32
                       description: Current unix timestamp
-                      default: 1624611931727
+                      default: 1625016367627
                     deviceId:
                       type: string
                       description: Device ID
-                      default: "6030d8e4-d594-11eb-b8bc-0242ac130003"
+                      default: "67e7508b-bb7c-48d9-b4cb-17f31efe9075"
                     email:
                       type: string
                       description: Unique login email for verification
-                      format: "abc@email.com"
+                      default: "email@domain.com"
                     loginAddress:
                       type: string
                       description: Login Address.
                       minimum: 3
                       maximum: 20
-                      default: "00:0a:95:9d:68:16"
+                      default: "cefa6e58e3628372aae8ee288d933f5507ecd799"
                     signature:
                       type: string
                       description: signature hashed value of (timestamp, deviceId, loginAdress).
                       default:
-                        MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCclOmZ4m9V+G43b23GgEjerU54NrAz8qiVG5apbg2ff+Hw/Zq8JpjO0M9NaJ74KscVbL4drR0LL4MRd58ce/MN5rUIXl6V7dNtQ5KARuIr6GesY96BhH2o4SHzk6SQTTcLHM2Ysvu83Qptzaylc77Myi9ShkdwJqlC0rOenfaFmwIDAQAB
+                        6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
                     publicKey:
                       type: string
                       description: publicKey of the .
                       # description: Login password.
                       # minimum: 5
                       # maximum: 20
-                      default: |
-                        MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCG/qcshFiSSkGTP7g2Lr5JcNJA
-                        J+XIR5SMKTXWVb5btg1IUnoOuicHCgrSjhIG/owzWLoEXFSpFc+6N0zx4iMJVb3T
-                        wct/355Vs/xEGUO3VucnyCBrvuv8sOWC8Pban2XF6sjOX3+f4Gvil5AbvCwsjK9J
-                        xX0tSQhbiQLNhznNGwIDAQAB
+                      default:
+                        03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
               required:
+                - timestamp
+                - deviceId
                 - email
                 - loginAddress
                 - signature
+                - publicKey
 
         required: true
       responses:
@@ -92,26 +87,34 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/GeneralResponse"
+                allOf:
+                - $ref: "#/components/schemas/GeneralResponse"
+                - type: object
+                  properties:
+                    data:
+                      type: object
+                      properties:
+                        nonce:
+                          type: string
+                        userId:
+                          type: integer
+                          format: int32
+                          description: user id
+                        code:
+                          type: string
+                          description: Device ID
   
   /user/verification:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
       description: |
-        For account creation step 2. After registeration, need to verify the code from email
-
         Prerequisite: use token from registration (ie: /user/registerByEmail) in Authorization
+        
+        For account creation step 2. After registeration, need to verify the code from email
       tags:
         - User Account
       summary:
         verify user
-      operationId: verification
+      operationId: registerVerification
       requestBody:
         content:
           "application/json":
@@ -120,12 +123,16 @@ paths:
                 - $ref: "#/components/schemas/GeneralRequest"
                 - type: object
                   properties:
+                        nonce:
+                          type: string
                         code:
                           type: string
                           description: verification code
+                          default: 545520
                         email:
                           type: string
                           description: user login email
+                          default: email@domain.com
               required:
                 - code
 
@@ -143,6 +150,8 @@ paths:
                     data:
                       type: object
                       properties:
+                        nonce:
+                          type: string
                         userId:
                           type: integer
                           format: int32
@@ -157,23 +166,29 @@ paths:
                         token:
                           type: string
                           description: Login token
+                        expiredTime:
+                          type: integer
+                          format: int32
+                          description: Expiry time in int
 
   /user/setupPaymentWallet:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
       description: |
         For account creation step 3. After code verification, need to generate wallet address
       tags:
         - User Account
       summary:
         after user successfully verified, generate a owner wallet address call this endpoint
-      operationId: verificationCallback
+      operationId: setupPaymentWallet
       requestBody:
         content:
           "application/json":
@@ -182,33 +197,22 @@ paths:
                 - $ref: "#/components/schemas/GeneralRequest"
                 - type: object
                   properties:
+                    nonce:
+                      type: string
                     userId:
                       type: integer
                       format: int32
                       description: user id
+                      default: 406
                     address:
                       type: string
                       description: owner wallet address
-                    signature:
-                      type: string
-                      description: owner wallet signature (wallet_address, timestamp)
-                    os:
-                      type: string
-                      description: Device OS version
-                    appVersion:
-                      type: string
-                      description: App Version
-                    registrationSource:
-                      type: string
-                      description: Registration Source
+                      default: "5f4de6435350068a5675450bfa434d9f5bc9a06c"
 
               required:
+                - nonce
                 - userId
                 - address
-                - signature
-                - os
-                - appVersion
-                - registrationSource
         required: true
       responses:
         200:
@@ -216,7 +220,21 @@ paths:
           content:
             "application/json":
               schema:
-                $ref: "#/components/schemas/GeneralResponse"
+                allOf:
+                - $ref: "#/components/schemas/GeneralResponse"
+                - type: object
+                  properties:
+                    walletAddress:
+                      type: integer
+                      format: int32
+                      description: newly created wallet address
+                    mainnetWalletAddress:
+                      type: string
+                      format: string
+                      description: mainnet wallet address
+                    isMetamaskAddr:
+                      type: string
+                      description: for metamask
 
   /user/resendVerificationEmail:
     post:
@@ -226,7 +244,7 @@ paths:
         - User Account
       summary:
         self explanatory
-      operationId: resend
+      operationId: resendVerificationEmail
       requestBody:
         content:
           "application/json":
@@ -235,6 +253,8 @@ paths:
                 - $ref: "#/components/schemas/GeneralRequest"
                 - type: object
                   properties:
+                    nonce:
+                      type: string
                     userId:
                       type: integer
                       format: int32
@@ -289,15 +309,6 @@ paths:
                         Signature in hex format. The signature is sign by Keccak256 hash a base string of key and value pairs x=y concaten by '&'; which consists of the following components in sequence:
                         * deviceId
                         * timestamp 
-                      os:
-                        type: string
-                        description: Device OS version
-                      appVersion:
-                        type: string
-                        description: App Version
-                      registrationSource:
-                        type: string
-                        description: Registration Source
               required:
                 - deviceId
                 - timestamp
@@ -339,6 +350,7 @@ paths:
 
   /user/loginByPassword:
     post:
+      deprecated: true
       description: |
         Not impelemented
       tags:
@@ -412,17 +424,21 @@ paths:
                       type: integer
                       format: int32
                       description: Current unix timestamp
+                      default: 1625019678684
                     walletAddress:
                       type: string
                       format: address
                       description: Wallet address
+                      default: "cefa6e58e3628372aae8ee288d933f5507ecd799"
                     publicKey:
                       type: string
                       format: string
                       description: ECDSA public key in hex string (little endian)
+                      default: "03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891"
                     deviceId:
                       type: string
                       description: Device ID
+                      default: "67e7508b-bb7c-48d9-b4cb-17f31efe9075"
                     sign:
                       type: string
                       format: hex string
@@ -431,15 +447,7 @@ paths:
                           * deviceId
                           * timestamp 
                           * walletAddress
-                    os:
-                      type: string
-                      description: Device OS version
-                    appVersion:
-                      type: string
-                      description: App Version
-                    registrationSource:
-                      type: string
-                      description: Registration Source
+                      default: "26e722e217faceecb56e0ccfbf13c4e228f7c217e2e611088d31a8c19961b35d52858ff945a4fd23d07ffaf242b8062e7f45907454d1f6cc4b5349a6507014ae"
 
                   required:
                     - deviceId
@@ -447,9 +455,6 @@ paths:
                     - walletAddress
                     - publicKey
                     - sign
-                    - os
-                    - appVersion
-                    - recentTransaction
       responses:
         200:
           description: successful operation
@@ -479,25 +484,23 @@ paths:
                             type: integer
                             description: Account status
 
-  /user/refreshToken:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
+  /user/refreshToken:    
     post:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      security:
+        - Authorization: []
+      description: |
+        Extend session time for login token
       tags:
         - User Account
       summary: Extend Login token expiry time if the token is not expired
       operationId: refershToken
-      requestBody:
-        content:
-          "application/json":
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/GeneralRequest"
       responses:
         200:
           description: successful operation
@@ -520,14 +523,16 @@ paths:
                             format: date-time
                             description: Token expiry time
   /user/signTransaction:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
       tags:
         - User Transaction
       summary: Sign transaction that invoke UserWallet smart contract
@@ -572,7 +577,7 @@ paths:
     get:
       tags:
         - User Others
-      summary: Get the latest client version
+      summary: Get the minimum support client version
       operationId: clientVersion
 
       responses:
@@ -599,6 +604,7 @@ paths:
                               description: Android minimum version number
   /user/serverConfig:
     get:
+      description: Get the centralize server configuration informations
       tags:
         - User Others
       summary: Get the system server config
@@ -652,14 +658,18 @@ paths:
                               description: mainnet/rinkeby smart contract config
                             
   /user/details:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     get:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        retrieve the user account details (ie: accounts, wallet, key)
       tags:
         - User Account
       responses:
@@ -676,62 +686,58 @@ paths:
                       data:
                         type: object
                         properties:
+                          LastLoginTime:
+                            type: string
+                          Staqtus:
+                            type: integer
+                            description: Account status
+                          LastModifiedDate:
+                            type: string
                           username:
                             type: string
                             description: User name
-                          email:
+                          CreatedDate:
+                            type: string
+                          Email:
                             type: string
                             format: email
                             description: Email
-                          isMetaMask:
+                          IsMetamaskAddr:
                             type: boolean
                             description: Is MetaMask account
-                          kycStatus:
+                          KycStatus:
                             type: integer
                             description: KYC status
-                          wallet_address:
+                          walletAddress:
                             type: string
                             format: address
                             description: Eurus wallet address
-                          mainnet_wallet_address:
+                          mainnetWalletAddress:
                             type: string
                             format: address
                             description: Mainnet wallet address
-                          status:
+                          ownerWalletAddress:
+                            type: string
+                            format: address
+                            description: Owner wallet address
+                          ChangeLoginPasswordCount:
                             type: integer
-                            description: Account status
-                        required:
-                          - username
-                          - email
-                          - isMetaMask
-
+                          ChangePaymentPasswordCount:
+                            type: integer
   /user/storage:
- 
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     get:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
       summary: Get the storage data in DB
       tags:
         - User Others
-      requestBody:
-        content:
-          "application/json":
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/GeneralRequest"
-                - type: object
-                  properties:
-                      platform:
-                        type: integer
-                        description: Mobile App or Mobile
-                  required:
-                    - platform
-        required: true
       responses:
         200:
           description: successful operation
@@ -762,6 +768,14 @@ paths:
                         required:
                           - platform
     post:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
         - User Others
       summary: Set/Update the storage data in DB
@@ -813,18 +827,21 @@ paths:
                           - sequence
 
   /user/friend:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
         - User Contact
-      summary: Add friend
-      operationId: addFriend
+      summary: Add a friend to current account list
+      operationId: userAddFriend
       requestBody:
         content:
           "application/json":
@@ -834,9 +851,6 @@ paths:
                 - type: object
                   description: Any one of
                   properties:
-                    email:
-                      type: string
-                      description: friend email
                     username:
                       type: string
                       description: friend username
@@ -854,6 +868,16 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/GeneralResponse"
     get:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
         - User Contact
       summary: Get friend list
@@ -886,20 +910,23 @@ paths:
                               type: string
                               description: Nick name
   /user/friend/{walletAddress}:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
-      - in: path
-        name: walletAddress
-        description: Friend wallet address
-        schema:
-          type: string
-        required: true
     put:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: walletAddress
+          description: Friend wallet address
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
         - User Contact
       summary: Update friend nick name
@@ -926,15 +953,25 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/GeneralResponse"
     delete:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: walletAddress
+          description: Friend wallet address
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
         - User Contact
       summary: Delete a friend
-      requestBody:
-        content:
-          "application/json":
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/GeneralRequest"
       responses:
         200:
           description: successful operation
@@ -946,17 +983,21 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
 
   /user/changeLoginPassword:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        Update the new signature for the user account login
       tags:
         - User Account
-      summary: Change login password
+      summary: Change login signature
       requestBody:
         content:
           "application/json":
@@ -1010,14 +1051,18 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
 
   /user/changePaymentPassword:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        Update the new signature for the user payment
       tags:
         - User Account
       summary: Change payment password
@@ -1074,6 +1119,17 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
   /user/registerDevice:
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        Resigter user's device and BioMetric
       tags:
         - User Account
       summary: Register a device for an user
@@ -1104,16 +1160,18 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/GeneralResponse"
   /user/recentTransaction:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
       tags:
-        - User Trascation
+        - User Transaction
       summary: lastest user transaction records for last n days
       operationId: recentTransaction
       requestBody:
@@ -1140,7 +1198,7 @@ paths:
                     properties:
                       data:
                         type: object
-                        properties:
+                        properties:                          
                           decimal:
                             type: integer
                             format: int32
@@ -1148,173 +1206,69 @@ paths:
                           transList:
                             type: array
                             items:
-                              anyOf:
-                                - type: object
-                                  properties:
-                                    transType:
-                                      type: integer
-                                      format: int32
-                                      description: transaction type (1 => transfer, 2 => deposit, 3 => withdraw)
-                                    transDate:
-                                      type: integer
-                                      format: int64
-                                      description: transaction date time in UNIX timestamp
-                                    txHash:
-                                      type: string
-                                      description: transaction hash
-                                    status:
-                                      type: integer
-                                      format: int32
-                                      description: transaction status (10 => waiting from confirmation (for centralized user only); 50 => transferred; -10 => error submitting (for centralized user only); -50 => error confirming)
-                                    remarks:
-                                      type: string
-                                      description: error message if the transaction is failed
-                                    isSend:
-                                      type: boolean
-                                      description: true => transaction send to others
-                                    fromAddress:
-                                      type: string
-                                      format: address
-                                      description: Source wallet address
-                                    toAddress:
-                                      type: string
-                                      format: address
-                                      description: Destination address
-                                    amount:
-                                      type: integer
-                                      format: int64
-                                      description: Transfer amount
-                                    gasUsed:
-                                      type: integer
-                                      format: int64
-                                      description: Gas used by user
-                                    gasPrice:
-                                      type: integer
-                                      format: int64
-                                      description: Gas price
-                                - type: object
-                                  properties:
-                                    transType:
-                                      type: integer
-                                      format: int32
-                                      description: transaction type (2 => deposit)
-                                    amount:
-                                      type: integer
-                                      format: int64
-                                      description: Deposit amount
-                                    status:
-                                      type: integer
-                                      format: int32
-                                      description: Deposit status
-                                        DepositError = - (status),
-                                        DepositReceiptCollected = 10,
-                                        DepositAssetCollected = 20,
-                                        DepositMintConfirming = 30,
-                                        DepositCompleted = 40,
-                                    fromAddress:
-                                      type: string
-                                      format: address
-                                      description: Deposit source address
-                                    toAddress:
-                                      type: string
-                                      format: address
-                                      description: to address at mainnet
-                                    destAddress:
-                                      type: string
-                                      format: address
-                                      description: target address at sidechain
-                                    chainLocation:
-                                      type: integer
-                                      format: int32
-                                      description: chain location for the txHash ( 1 - sidechain , 2 - mainnet)
-                                    txHash:
-                                      type: string
-                                      description: Transaction hash
-                                    mintTransId:
-                                      type: integer
-                                      format: int64
-                                      description: Mint transId (Optional) only exist at state 2, 3
-                                    remarks:
-                                      type: string
-                                      description: Error description (Optional) only exists at state -1
-                                    transDate:
-                                      type: integer
-                                      format: int64
-                                      description: trans date
-                                    depositTxHash:
-                                      type: string
-                                      description: Identifier of deposit transaction
-                                - type: object
-                                  properties:
-                                    transType:
-                                      type: integer
-                                      format: int32
-                                      description: transaction type (3 => withdraw)
-                                    status:
-                                      type: integer
-                                      format: int32
-                                      description: Withdraw status
-                                        StatusError WithdrawStatus =  - (status)
-                                        StatusPendingApproval = 10
-                                        StatusApproved = 20
-                                        StatusRejected = 30
-                                        StatusBurnConfirming = 40
-                                        StatusBurned = 50
-                                        StatusCompleted = 60
-                                    fromAddress:
-                                      type: string
-                                      format: address
-                                      description: Side chain source address
-                                    toAddress:
-                                      type: string
-                                      format: address
-                                      description: Side chain destination address
-                                    targetAddress:
-                                      type: string
-                                      format: address
-                                      description: Mainnet destination address
-                                    chainLocation:
-                                      type: integer
-                                      format: int32
-                                      description: txHash chain location ( 1 - sidechain , 2 - mainnet)
-                                    txHash:
-                                      type: string
-                                      description: Transaction hash
-                                    requestTransId:
-                                      type: integer
-                                      format: int64
-                                      description: Withdraw request transId (Optional) exists at state 0, 1, 2
-                                    burnTransId:
-                                      type: integer
-                                      format: int64
-                                      description: Burn transid (Optional) exists at state 3, 4
-                                    remarks:
-                                      type: string
-                                      description: Error description (Optional) only exists at state -1
-                                    transDate:
-                                      type: integer
-                                      format: int64
-                                      description: trans date
-                                    withdrawTxHash:
-                                      type: string
-                                      description: Identifier of withdraw transaction
+                              type: object
+                              properties:
+                                transType:
+                                  type: integer
+                                  format: int32
+                                  description: transaction type (1 => transfer, 2 => deposit, 3 => withdraw)
+                                transDate:
+                                  type: integer
+                                  format: int64
+                                  description: transaction date time in UNIX timestamp
+                                txHash:
+                                  type: string
+                                  description: transaction hash
+                                status:
+                                  type: integer
+                                  format: int32
+                                  description: transaction status (10 => waiting from confirmation (for centralized user only); 50 => transferred; -10 => error submitting (for centralized user only); -50 => error confirming)
+                                remarks:
+                                  type: string
+                                  description: error message if the transaction is failed
+                                isSend:
+                                  type: boolean
+                                  description: true => transaction send to others
+                                fromAddress:
+                                  type: string
+                                  format: address
+                                  description: Source wallet address
+                                toAddress:
+                                  type: string
+                                  format: address
+                                  description: Destination address
+                                amount:
+                                  type: integer
+                                  format: int64
+                                  description: Transfer amount
+                                gasUsed:
+                                  type: integer
+                                  format: int64
+                                  description: Gas used by user
+                                gasPrice:
+                                  type: integer
+                                  format: int64
+                                  description: Gas price
   /user/withdrawAdminFee/{currencySymbol}:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
-      - in: path
-        name: currencySymbol
-        description: Currency name
-        schema:
-          type: string
-        required: true
     get:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: currencySymbol
+          description: Currency name
+          schema:
+            type: string
+          required: true
+          example: USDT
       tags:
-        - User Trascation
+        - User Transaction
       responses:
         200:
           description: successful operation
@@ -1348,6 +1302,8 @@ paths:
 
   /user/forgetLoginPassword:
     post:
+      description: |
+        Request email to reset password
       tags:
         - User Account
       summary:
@@ -1377,10 +1333,13 @@ paths:
 
   /user/verifyForgetLoginPassword:
     post:
+      description: |
+        Prerequisite: get the code from "/user/forgetLoginPassword"<br><br>
+        Retrieve the new token by verifying code from email
       tags:
         - User Account
       summary: verify forget login password token
-      operationId: verify forget login password token
+      operationId: verifyForgetLoginPassword
       requestBody:
         content:
           "application/json":
@@ -1414,14 +1373,18 @@ paths:
                             description: reset login password Token
 
   /user/resetLoginPassword:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        Update and replace the new signature for the user account login
       tags:
         - User Account
       summary: reset login password
@@ -1471,14 +1434,16 @@ paths:
                   - type: object
   
   /user/forgetPaymentPassword:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        Request email to reset password
       tags:
         - User Account
       summary:
@@ -1502,18 +1467,21 @@ paths:
 
 
   /user/verifyForgetPaymentPassword:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        Prerequisite: get the code from "/user/forgetPaymentPassword"<br><br>
+        Retrieve the new token by verifying code from email
       tags:
         - User Account
-      summary: verify forget login password token
-      operationId: verify forget login password token
+      summary: verify forget payment password token
+      operationId: verifyForgetPaymentPassword
       requestBody:
         content:
           "application/json":
@@ -1544,18 +1512,22 @@ paths:
                             description: reset payment password Token
 
   /user/resetPaymentPassword:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      security:
+        - Authorization: []
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      description: |
+        Update and replace the new signature for the user account login
       tags:
         - User Account
-      summary: reset login password
-      operationId: resetLoginPassword
+      summary: reset payment password
+      operationId: resetPaymentPassword
       requestBody:
         content:
           "application/json":
@@ -1604,8 +1576,9 @@ paths:
 
   /admin/login:
     post:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Admin login
       operationId: adminLogin
       requestBody:
@@ -1650,8 +1623,9 @@ paths:
 
   /admin/merchant:
     post:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Create a merchant account. Merchant need to change his username and password when first login the system
       operationId: createMerchant
       parameters:
@@ -1709,8 +1683,9 @@ paths:
                         required:
                           - merchantId
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Query merchant list
       operationId: merchantList
       parameters:
@@ -1749,8 +1724,9 @@ paths:
 
   /admin/merchant/{merchantId}:
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Merchant details
       operationId: merchantDetails
       parameters:
@@ -1805,8 +1781,9 @@ paths:
 
   /admin/subAdmin:
     post:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Create a subadmin account.
       operationId: createSubAdmin
       parameters:
@@ -1851,8 +1828,9 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/GeneralResponse"
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Get sub admin account list.
       operationId: subAdminList
       parameters:
@@ -1894,9 +1872,10 @@ paths:
 
   /admin/subAdmin/{adminId}:
     delete:
+      deprecated: true
       summary: Delete sub admin account (Cannot delete self sub admin account nor master admin account)
       tags:
-        - admin
+        - Admin
       parameters:
         - in: header
           name: Authorization
@@ -1910,12 +1889,6 @@ paths:
           in: path
           description: Admin ID
           required: true
-      requestBody:
-        content:
-          "application/json":
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/GeneralRequest"
       responses:
         200:
           description: successful operation
@@ -1928,10 +1901,11 @@ paths:
 
   /admin/subAdmin/role/{adminId}:
     put:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Update sub admin account roles (Cannot update self sub admin account).
-      operationId: subAdminList
+      operationId: subAdminRole
       parameters:
         - in: header
           name: Authorization
@@ -1974,10 +1948,11 @@ paths:
 
   /admin/subAdmin/password/{adminId}:
     put:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Update sub admin account password.
-      operationId: subAdminList
+      operationId: subAdminPassword
       parameters:
         - in: header
           name: Authorization
@@ -2020,23 +1995,24 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
 
   /admin/subAdmin/status/{adminId}:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
-      - name: adminId
-        in: path
-        schema:
-          type: integer
-        required: true
     put:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: adminId
+          in: path
+          schema:
+            type: integer
+          required: true
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Update sub admin account status (Cannot update self account nor master admin account)
-      operationId: subAdminList
+      operationId: subAdminStatus
       requestBody:
         content:
           "application/json":
@@ -2061,8 +2037,9 @@ paths:
 
   /admin/permission:
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Get permission list
       operationId: permission
       parameters:
@@ -2089,8 +2066,9 @@ paths:
                           $ref: "#/components/schemas/Permission"
   /admin/role:
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Get role list
       operationId: roleList
       parameters:
@@ -2124,25 +2102,26 @@ paths:
                               type: string
                               description: Role name
   /admin/role/{roleId}:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
-      - name: roleId
-        in: path
-        schema:
-          type: integer
-          format: int64
-        description: Role ID
-        required: true
     get:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: roleId
+          in: path
+          schema:
+            type: integer
+            format: int64
+          description: Role ID
+          required: true
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Get role details
-      operationId: role
+      operationId: roleDetails
       responses:
         200:
           description: successful operation
@@ -2178,8 +2157,23 @@ paths:
                               description: Permission ID for this role
 
     put:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: roleId
+          in: path
+          schema:
+            type: integer
+            format: int64
+          description: Role ID
+          required: true
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Update a role permission
       requestBody:
         content:
@@ -2215,8 +2209,23 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/GeneralResponse"
     delete:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: roleId
+          in: path
+          schema:
+            type: integer
+            format: int64
+          description: Role ID
+          required: true
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Delete a role
       responses:
         200:
@@ -2229,16 +2238,17 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
 
   /admin/pendingWithdraw:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     get:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Query pending withdraw list
       responses:
         200:
@@ -2281,8 +2291,9 @@ paths:
                               description: Current status
   /admin/pendingWithdraw/{pendingWithdrawId}:
     put:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Approve or reject a withdraw request
       parameters:
         - in: header
@@ -2321,18 +2332,18 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
 
   /admin/pendingWithdrawHistory:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Query pending approval history
       parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
         - in: query
           name: startDate
           description: Start date in UTC 0 inclusively
@@ -2362,16 +2373,17 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
 
   /admin/pendingConfirmAPISetting:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     get:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Query pending confirm API setting list
       responses:
         200:
@@ -2425,8 +2437,9 @@ paths:
 
   /admin/pendingConfirmAPISetting/{pendingId}:
     put:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Query pending confirm API setting list
       parameters:
         - in: header
@@ -2458,8 +2471,9 @@ paths:
                   - $ref: '#/components/schemas/GeneralResponse'   
   /admin/server/list:
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Query server list
       parameters:
         - in: header
@@ -2508,8 +2522,9 @@ paths:
                               description: ETH decimal
   /admin/fee/withdrawalFee:
     get:
+      deprecated: true
       tags:
-        - admin
+        - Admin
       summary: Query withraw admin fee 
       parameters:
         - in: header
@@ -2544,6 +2559,7 @@ paths:
                                 type: integer
                                 format: int32
     post:
+      deprecated: true
       summary: Update withdraw fee in ETH
       parameters:
         - in: header
@@ -2571,8 +2587,9 @@ paths:
 
   /merchant/login:
     post:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Merchant admin login
       requestBody:
         content:
@@ -2618,16 +2635,17 @@ paths:
                             format: date-time
                             description: Token expiry timestamp
   /merchant/initalizeWallet:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
     post:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Initialize merchant wallet
       requestBody:
         content:
@@ -2662,8 +2680,9 @@ paths:
                             description: Mainnet hot wallet address
   /merchant/subAdmin:
     post:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Create a merchant subadmin account.
       operationId: createMerchantSubAdmin
       parameters:
@@ -2717,8 +2736,9 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/GeneralResponse"
     get:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Get merchant sub admin account list.
       operationId: merchantSubAdminList
       parameters:
@@ -2760,9 +2780,10 @@ paths:
 
   /merchant/subAdmin/{merchantAdminId}:
     delete:
+      deprecated: true
       summary: Delete merchant sub admin account (Cannot delete self sub admin account nor master admin account)
       tags:
-        - merchant
+        - Merchant
       parameters:
         - in: header
           name: Authorization
@@ -2776,12 +2797,6 @@ paths:
           in: path
           description: Merchant admin ID
           required: true
-      requestBody:
-        content:
-          "application/json":
-            schema:
-              allOf:
-                - $ref: "#/components/schemas/GeneralRequest"
       responses:
         200:
           description: successful operation
@@ -2793,10 +2808,11 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
   /merchant/subAdmin/password/{merchantAdminId}:
     put:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Update merchant sub admin account password.
-      operationId: subAdminList
+      operationId: subAdminMerchantPassword
       parameters:
         - in: header
           name: Authorization
@@ -2839,23 +2855,24 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
 
   /merchant/subAdmin/status/{merchantAdminId}:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
-      - name: merchantAdminId
-        in: path
-        schema:
-          type: integer
-        required: true
     put:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: merchantAdminId
+          in: path
+          schema:
+            type: integer
+          required: true
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Update merchant sub admin account status (Cannot update self account nor master admin account)
-      operationId: subAdminList
+      operationId: subAdminMerchantStatus
       requestBody:
         content:
           "application/json":
@@ -2879,10 +2896,11 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
   /merchant/permission:
     get:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Get permission list
-      operationId: permission
+      operationId: merchantPermission
       parameters:
         - in: header
           name: Authorization
@@ -2907,10 +2925,11 @@ paths:
                           $ref: "#/components/schemas/Permission"
   /merchant/role:
     get:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Get role list
-      operationId: roleList
+      operationId: roleMerchantList
       parameters:
         - in: header
           name: Authorization
@@ -2942,25 +2961,26 @@ paths:
                               type: string
                               description: Role name
   /merchant/role/{roleId}:
-    parameters:
-      - in: header
-        name: Authorization
-        description: Login token
-        schema:
-          type: string
-        required: true
-      - name: roleId
-        in: path
-        schema:
-          type: integer
-          format: int64
-        description: Role ID
-        required: true
-    get:
+    get:    
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: roleId
+          in: path
+          schema:
+            type: integer
+            format: int64
+          description: Role ID
+          required: true
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Get role details
-      operationId: role
+      operationId: merchantRole
       responses:
         200:
           description: successful operation
@@ -2996,8 +3016,23 @@ paths:
                               description: Permission ID for this role
 
     put:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: roleId
+          in: path
+          schema:
+            type: integer
+            format: int64
+          description: Role ID
+          required: true
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Update a role permission
       requestBody:
         content:
@@ -3033,8 +3068,23 @@ paths:
                 allOf:
                   - $ref: "#/components/schemas/GeneralResponse"
     delete:
+      parameters:
+        - in: header
+          name: Authorization
+          description: Login token
+          schema:
+            type: string
+          required: true
+        - name: roleId
+          in: path
+          schema:
+            type: integer
+            format: int64
+          description: Role ID
+          required: true
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Delete a role
       responses:
         200:
@@ -3048,8 +3098,9 @@ paths:
 
   /merchant/transfer:
     post:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Transfer to another Eurus address (this API does not support transfer to mainnet address)
       requestBody:
         content:
@@ -3092,8 +3143,9 @@ paths:
                             description: Transfer is waiting for approval
   /merchant/withdraw:
     post:
+      deprecated: true
       tags:
-        - merchant
+        - Merchant
       summary: Withdraw money from Eurus wallet to mainnet wallet
       requestBody:
         content:
@@ -3134,6 +3186,7 @@ paths:
 
   /testnet/asset/faucet:
     get:
+      deprecated: true
       tags:
       - testnet
       summary: Get faucet currency config
@@ -3169,6 +3222,7 @@ paths:
                               description: Number of faucet day interval
 
     post:
+      deprecated: true
       tags:
       - testnet
       summary: Faucet certain currency to target wallet address at Rinkeby
@@ -3212,16 +3266,14 @@ paths:
                             description: Processing status - 1 = transaction created, 2 = waiting for confirmation, 3 = facet already today, try again later
 
 components:
+  securitySchemes:
+    Authorization:
+      type: apiKey
+      in: header
+      name: "Authorization"
   schemas:
     GeneralRequest:
       type: object
-      properties:
-        #nonce:
-        #  type: string
-        #  format: uuid
-        #  description: Request nonce
-      required:
-        #- nonce
 
     GeneralResponse:
       type: object
@@ -3322,17 +3374,3 @@ components:
       items:
         type: string
         description: Currency symbol of ERC20 assets
-
-  securitySchemes:
-    petstore_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: http://petstore.swagger.io/oauth/dialog
-          scopes:
-            write:pets: modify pets in your account
-            read:pets: read your pets
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
