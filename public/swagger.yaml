@@ -1,6 +1,15 @@
 openapi: 3.0.1
 info:
   title: Eurus API Reference
+  description: |
+    FAQ
+    1. Where to get authorization token?
+
+        You can use either /user/registerByEmail or /user/loginBySignature to retrieve the authorize token
+
+    2. I have used the authorization token in the header parameter, why doesn't it work?
+
+        Authorization token in the header parameter is dummy variable (swagger issue), please use the top right "Authorize" and input your token.
   version: 0.1.16
   termsOfService: https://Eurus/terms/
   contact:
@@ -8,24 +17,32 @@ info:
 servers:
   - url: http://54.254.5.83:8082/
 tags:
-  - name: User Account
+  - name: Centralized User Account
     description: User related service
-  - name: User Transaction
+  - name: Centralized User Transaction
     description: User related service
-  - name: User Contact
+  - name: Centralized User Contact
     description: User related service
-  - name: User Others
+  - name: Centralized User Others
     description: User related service
-  - name: Admin
+  - name: Centralized Admin
     description: Admin management service
-  - name: Merchant
+  - name: Centralized Merchant
     description: Merchant admin management service
+  - name: Decentralized User Account
+    description: User related service
+  - name: Decentralized User Transaction
+    description: User related service
+  - name: Decentralized User Contact
+    description: User related service
+  - name: Decentralized User Others
+    description: User related service
 
 paths:
   /user/registerByEmail:
     post:
       tags:
-        - User Account
+        - Centralized User Account
       summary: Register a new user by email. System creates an user wallet and a corresponding private, public key.
       description: |
         For Account creation step 1.
@@ -111,7 +128,7 @@ paths:
         
         For account creation step 2. After registeration, need to verify the code from email
       tags:
-        - User Account
+        - Centralized User Account
       summary:
         verify user
       operationId: registerVerification
@@ -185,7 +202,7 @@ paths:
       description: |
         For account creation step 3. After code verification, need to generate wallet address
       tags:
-        - User Account
+        - Centralized User Account
       summary:
         after user successfully verified, generate a owner wallet address call this endpoint
       operationId: setupPaymentWallet
@@ -241,7 +258,7 @@ paths:
       description: |
         For account creation step 2. After registration, need to verify the code from email. If verification is not received in the email, user can use this to send the code to email again.
       tags:
-        - User Account
+        - Centralized User Account
       summary:
         self explanatory
       operationId: resendVerificationEmail
@@ -276,7 +293,7 @@ paths:
       description: |
         For account creation step 3. After code verification, user can import own wallet.
       tags:
-        - User Account
+        - Centralized User Account
       summary: Import an existing MetaMask or similar wallet into Eurus
       operationId: importWallet
       requestBody:
@@ -292,16 +309,20 @@ paths:
                       type: integer
                       format: int32
                       description: Current unix timestamp
+                      default: 1625016367627
                     walletAddress:
                       type: string
                       format: address
                       description: Wallet address to be imported
+                      default: 796b4492f26c4c1382029731903db2f47fe8fecd
                     publicKey:
                       type: string
                       description: Wallet public key in hex string (little endian)
+                      default: 03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
                     deviceId:
                       type: string
                       description: Device ID
+                      default: 67e7508b-bb7c-48d9-b4cb-17f31efe9075
                     sign:
                       type: string
                       format: hex
@@ -309,6 +330,7 @@ paths:
                         Signature in hex format. The signature is sign by Keccak256 hash a base string of key and value pairs x=y concaten by '&'; which consists of the following components in sequence:
                         * deviceId
                         * timestamp 
+                      default: 6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
               required:
                 - deviceId
                 - timestamp
@@ -354,7 +376,7 @@ paths:
       description: |
         Not impelemented
       tags:
-        - User Account
+        - Centralized User Account
       summary: User uses password to request login token
       operationId: loginByPassword
       requestBody:
@@ -409,7 +431,8 @@ paths:
       description: |
         Retrieve login token by authenticating signature
       tags:
-        - User Account
+        - Centralized User Account
+        - Decentralized User Account
       summary: For MetaMask user to login system by sign a request by user owned private key
       operationId: loginBySignature
       requestBody:
@@ -498,7 +521,7 @@ paths:
       description: |
         Extend session time for login token
       tags:
-        - User Account
+        - Centralized User Account
       summary: Extend Login token expiry time if the token is not expired
       operationId: refershToken
       responses:
@@ -534,7 +557,7 @@ paths:
             type: string
           required: true
       tags:
-        - User Transaction
+        - Centralized User Transaction
       summary: Sign transaction that invoke UserWallet smart contract
       operationId: signTransaction
       requestBody:
@@ -548,14 +571,17 @@ paths:
                         value:
                           type: string
                           description: Send value in number string, can be empty string if no value send
+                          default: 0
                         gasPrice:
                           type: integer
                           format: int64
                           description: Gas price
+                          default: 2500000000
                         inputFunction:
                           type: string
                           format: hex string
                           description: Function call with method ID and input argument , by ABI encode byte array
+                          default: 3c4cd9110000000000000000000000004dfb6d6790054f3eb68324bc230e3104137ca8db000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000f424000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000455534454000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000041a9aba64e1c1e6d308563a2372ec22fb4998ea932d99634fd9352de2efb898c5e0647c522279b4315fc793ec1ed1cd2aecf087a4dee7a675660f01618bbd18b371b00000000000000000000000000000000000000000000000000000000000000
       responses:
         200:
           description: successful operation
@@ -576,7 +602,7 @@ paths:
   /user/clientVersion:
     get:
       tags:
-        - User Others
+        - Centralized User Others
       summary: Get the minimum support client version
       operationId: clientVersion
 
@@ -606,7 +632,7 @@ paths:
     get:
       description: Get the centralize server configuration informations
       tags:
-        - User Others
+        - Centralized User Others
       summary: Get the system server config
       operationId: serverConfig
       responses:
@@ -669,9 +695,9 @@ paths:
             type: string
           required: true
       description: |
-        retrieve the user account details (ie: accounts, wallet, key)
+        retrieve the Centralized User Account details (ie: accounts, wallet, key)
       tags:
-        - User Account
+        - Centralized User Account
       responses:
         200:
           description: successful operation
@@ -737,7 +763,7 @@ paths:
           required: true
       summary: Get the storage data in DB
       tags:
-        - User Others
+        - Centralized User Others
       responses:
         200:
           description: successful operation
@@ -777,7 +803,7 @@ paths:
           required: true
       deprecated: true
       tags:
-        - User Others
+        - Centralized User Others
       summary: Set/Update the storage data in DB
       requestBody:
         content:
@@ -839,7 +865,7 @@ paths:
           required: true
       deprecated: true
       tags:
-        - User Contact
+        - Centralized User Contact
       summary: Add a friend to current account list
       operationId: userAddFriend
       requestBody:
@@ -879,7 +905,7 @@ paths:
           required: true
       deprecated: true
       tags:
-        - User Contact
+        - Centralized User Contact
       summary: Get friend list
       responses:
         200:
@@ -928,7 +954,7 @@ paths:
           required: true
       deprecated: true
       tags:
-        - User Contact
+        - Centralized User Contact
       summary: Update friend nick name
       requestBody:
         content:
@@ -970,7 +996,7 @@ paths:
           required: true
       deprecated: true
       tags:
-        - User Contact
+        - Centralized User Contact
       summary: Delete a friend
       responses:
         200:
@@ -994,9 +1020,9 @@ paths:
             type: string
           required: true
       description: |
-        Update the new signature for the user account login
+        Update the new signature for the Centralized User Account login
       tags:
-        - User Account
+        - Centralized User Account
       summary: Change login signature
       requestBody:
         content:
@@ -1008,27 +1034,35 @@ paths:
                   properties:
                     oldLoginAddress:
                       type: string
+                      default: cefa6e58e3628372aae8ee288d933f5507ecd799
                     loginAddress:
                       type: string
+                      default: cefa6e58e3628372aae8ee288d933f5507ecd799
                     timestamp:
                       type: integer
                       format: int32
                       description: Current unix timestamp
+                      default: 1625016367627
                     deviceId:
                       type: string
                       description: Device ID
+                      default: 67e7508b-bb7c-48d9-b4cb-17f31efe9075
                     sign:
                       type: string
                       description: signature.
+                      default: 6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
                     oldSign:
                       type: string
                       description: old signature.
+                      default: 6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
                     publicKey:
                       type: string
                       description: public key, in uncompressed format (66 bytes)
+                      default: 03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
                     oldPublicKey:
                       type: string
                       description: old public key, in uncompressed format (66 bytes)
+                      default: 03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
                   required:
                   #   - oldPassword
                   #   - newPassword
@@ -1064,7 +1098,7 @@ paths:
       description: |
         Update the new signature for the user payment
       tags:
-        - User Account
+        - Centralized User Account
       summary: Change payment password
       requestBody:
         content:
@@ -1076,27 +1110,35 @@ paths:
                   properties:
                     oldOwnerWalletAddress:
                       type: string
+                      default: 0x5f4de6435350068a5675450bfa434d9f5bc9a06c
                     ownerWalletAddress:
                       type: string
+                      default: 0x5f4de6435350068a5675450bfa434d9f5bc9a06c
                     timestamp:
                       type: integer
                       format: int32
                       description: Current unix timestamp
+                      default: 1625016367627
                     deviceId:
                       type: string
                       description: Device ID
-                    sign:
-                      type: string
-                      description: signature.
+                      default: 67e7508b-bb7c-48d9-b4cb-17f31efe9075
                     oldSign:
                       type: string
                       description: old signature.
+                      default: 6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
+                    sign:
+                      type: string
+                      description: signature.
+                      default: 6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
                     publicKey:
                       type: string
                       description: public key, in uncompressed format (66 bytes)
+                      default: 03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
                     oldPublicKey:
                       type: string
                       description: old public key, in uncompressed format (66 bytes)
+                      default: 03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
                   required:
                   #   - oldPassword
                   #   - newPassword
@@ -1119,6 +1161,7 @@ paths:
                   - $ref: "#/components/schemas/GeneralResponse"
   /user/registerDevice:
     post:
+      deprecated: true
       security:
         - Authorization: []
       parameters:
@@ -1131,7 +1174,7 @@ paths:
       description: |
         Resigter user's device and BioMetric
       tags:
-        - User Account
+        - Centralized User Account
       summary: Register a device for an user
       operationId: registerDevice
       requestBody:
@@ -1171,8 +1214,8 @@ paths:
             type: string
           required: true
       tags:
-        - User Transaction
-      summary: lastest user transaction records for last n days
+        - Centralized User Transaction
+      summary: lastest Centralized User Transaction records for last n days
       operationId: recentTransaction
       requestBody:
         content:
@@ -1184,6 +1227,7 @@ paths:
                   properties:
                     currencySymbol:
                       type: string
+                      default: ETH
 
       responses:
         200:
@@ -1268,7 +1312,7 @@ paths:
           required: true
           example: USDT
       tags:
-        - User Transaction
+        - Centralized User Transaction
       responses:
         200:
           description: successful operation
@@ -1305,7 +1349,7 @@ paths:
       description: |
         Request email to reset password
       tags:
-        - User Account
+        - Centralized User Account
       summary:
         forget login address
       operationId: forgetLoginAddress
@@ -1319,6 +1363,7 @@ paths:
                   properties:
                     email:
                       type: string
+                      default: email1@domain.com
                   required:
                     - email
         required: true
@@ -1337,7 +1382,7 @@ paths:
         Prerequisite: get the code from "/user/forgetLoginPassword"<br><br>
         Retrieve the new token by verifying code from email
       tags:
-        - User Account
+        - Centralized User Account
       summary: verify forget login password token
       operationId: verifyForgetLoginPassword
       requestBody:
@@ -1352,6 +1397,7 @@ paths:
                     userId:
                       type: integer
                       description: user id
+                      default: 408
                     code:
                       type: string
                       description: verification code
@@ -1384,9 +1430,9 @@ paths:
             type: string
           required: true
       description: |
-        Update and replace the new signature for the user account login
+        Update and replace the new signature for the Centralized User Account login
       tags:
-        - User Account
+        - Centralized User Account
       summary: reset login password
       operationId: resetLoginPassword
       requestBody:
@@ -1402,20 +1448,25 @@ paths:
                             type: integer
                             format: int32
                             description: Current unix timestamp
+                            default: 1625016367627
                           deviceId:
                             type: string
                             description: Device ID
+                            default: 67e7508b-bb7c-48d9-b4cb-17f31efe9075
                           loginAddress:
                             type: string
                             description: Login Address.
                             minimum: 3
                             maximum: 20
+                            default: cefa6e58e3628372aae8ee288d933f5507ecd799
                           sign:
                             type: string
                             description: signature.
+                            default: 6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
                           publicKey:
                             type: string
                             description: publicKey.
+                            default: 03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
                   required:
                           - timestamp
                           - deviceId
@@ -1445,7 +1496,7 @@ paths:
       description: |
         Request email to reset password
       tags:
-        - User Account
+        - Centralized User Account
       summary:
         forget payment address
       operationId: forgetPaymentAddress
@@ -1479,7 +1530,7 @@ paths:
         Prerequisite: get the code from "/user/forgetPaymentPassword"<br><br>
         Retrieve the new token by verifying code from email
       tags:
-        - User Account
+        - Centralized User Account
       summary: verify forget payment password token
       operationId: verifyForgetPaymentPassword
       requestBody:
@@ -1523,9 +1574,9 @@ paths:
             type: string
           required: true
       description: |
-        Update and replace the new signature for the user account login
+        Update and replace the new signature for the Centralized User Account login
       tags:
-        - User Account
+        - Centralized User Account
       summary: reset payment password
       operationId: resetPaymentPassword
       requestBody:
@@ -1541,20 +1592,25 @@ paths:
                             type: integer
                             format: int32
                             description: Current unix timestamp
+                            default: 1625016367627
                           deviceId:
                             type: string
                             description: Device ID
+                            default: 67e7508b-bb7c-48d9-b4cb-17f31efe9075
                           ownerWalletAddress:
                             type: string
                             description: ownerWalletAddress.
                             minimum: 3
                             maximum: 20
+                            default: 0x5f4de6435350068a5675450bfa434d9f5bc9a06c
                           sign:
                             type: string
                             description: signature.
+                            default: 6039ece68ffe9b521617b1b5b44b0873c7b9522b1e2d32888f43f5b27420c49424710b752939b2c425ea1a0e963c3f2fad1013d160ec69613b6046004298e90e
                           publicKey:
                             type: string
                             description: publicKey.
+                            default: 03c07421794fdefddab88ac7d2daea3109078f4578470d0a4b7814c7eca151c891
                   required:
                           - timestamp
                           - deviceId
